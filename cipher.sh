@@ -1,23 +1,39 @@
 #!/bin/bash
 
-# Check if at least two arguments are provided
-if [ $# -lt 2 ]; then
-    echo "Usage: $0 {encrypt|decrypt|encrypt-num|decrypt-num} value"
+# Check if exactly two arguments are given (file name and command)
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 <command> <file>"
+    echo "Command can be either 'encrypt' or 'decrypt'."
     exit 1
 fi
 
-command=$1
-value=$2
+COMMAND=$1
+FILE=$2
 
-case $command in
+# Prompt for the password
+echo "Enter password: "
+read -s PASSWORD
+
+# Perform encryption or decryption based on the command
+case $COMMAND in
 encrypt)
-    echo -n $value | tr '[A-Za-z]' '[N-ZA-Mn-za-m]' | base64
+    openssl enc -aes-256-cbc -pbkdf2 -salt -in "$FILE" -out "${FILE}.enc" -base64 -pass pass:"$PASSWORD"
+    if [ $? -eq 0 ]; then
+        echo "File encrypted successfully: ${FILE}.enc"
+    else
+        echo "Encryption failed."
+    fi
     ;;
 decrypt)
-    echo -n $value | base64 --decode | tr '[A-Za-z]' '[N-ZA-Mn-za-m]'
+    openssl enc -aes-256-cbc -pbkdf2 -salt -d -in "$FILE" -out "${FILE%.*}.dec" -base64 -pass pass:"$PASSWORD"
+    if [ $? -eq 0 ]; then
+        echo "File decrypted successfully: ${FILE%.*}.dec"
+    else
+        echo "Decryption failed."
+    fi
     ;;
 *)
-    echo "Invalid command. Please use 'encrypt' or 'decrypt'."
-    exit 2
+    echo "Invalid command. Use 'encrypt' or 'decrypt'."
+    exit 1
     ;;
 esac

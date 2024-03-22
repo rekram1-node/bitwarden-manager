@@ -1,0 +1,6 @@
+{
+    "editor.formatOnSave": true,
+    "[shellscript]": {
+        "editor.formatOnSave": true
+    }
+}
